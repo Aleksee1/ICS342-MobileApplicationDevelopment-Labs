@@ -27,6 +27,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ics342.labs.data.DataItem
 import com.ics342.labs.ui.theme.LabsTheme
 
@@ -60,7 +66,20 @@ class MainActivity : ComponentActivity() {
             LabsTheme {
                 // A surface container using the 'background' color from the theme
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    DataListScreen(dataItems)
+                    val navController = rememberNavController()
+                    NavHost(navController = navController, startDestination = "Start") {
+                        this.composable("Start") {
+                            DataItemList(dataItems, navController)
+                        }
+
+                        composable("2nd Screen/{id}/{name}/{description}") {backStackEntry ->
+                            DataDetailsScreen(
+                                backStackEntry.arguments?.getString("id").toString(),
+                                backStackEntry.arguments?.getString("name").toString(),
+                                backStackEntry.arguments?.getString("description").toString()
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -68,11 +87,36 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun DataListScreen(items: List<DataItem>) {
-    var dataItem by remember { mutableStateOf<DataItem?>(null) }
-    DataItemList(items) {dataItem = it }
-    dataItem?.let {
-        AlertDialog (
+fun DataDetailsScreen(id: String, name: String, description: String) {
+    Row {
+        Spacer(modifier = Modifier.size(10.dp))
+        Text(
+            text = id,
+            modifier = Modifier.size(70.dp),
+            fontSize = 50.sp
+        )
+        Column {
+            Text(
+                text = name,
+                fontWeight = FontWeight.Bold,
+                fontSize = 30.sp
+            )
+            Text(
+                text = description,
+                fontSize = 20.sp
+            )
+        }
+    }
+}
+
+@Composable
+// dataItem?.let doesn't work well with going to a new screen
+fun DataListScreen(items: List<DataItem>, navController: NavController) {
+    //var dataItem by remember { mutableStateOf<DataItem?>(null) }
+    //DataItemList(items) {dataItem = it }
+    //dataItem?.let {
+        //navController.navigate("2nd Screen")
+        /*AlertDialog (
             onDismissRequest = { dataItem = null },
             title = { Text(it.name) },
             text = { Text(it.description) },
@@ -86,8 +130,8 @@ fun DataListScreen(items: List<DataItem>) {
                     Text("Okay")
                 }
             }
-        )
-    }
+        )*/
+    //}
 }
 
 @Composable
@@ -125,13 +169,13 @@ fun DataItemView(dataItem: DataItem) {
 }
 
 @Composable
-fun DataItemList(dataItems: List<DataItem>, dataItemClicked: (DataItem) -> Unit) {
+fun DataItemList(dataItems: List<DataItem>, navController: NavController) {
     /* Create the list here. This function will call DataItemView() */
     LazyColumn {
         items(dataItems) { index ->
             Box (
                 modifier = Modifier.clickable {
-                    dataItemClicked(index)
+                    navController.navigate("2nd Screen/" + index.id.toString() + "/" + index.name + "/" + index.description)
                 }
             )
             {
