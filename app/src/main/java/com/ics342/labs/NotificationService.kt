@@ -4,8 +4,10 @@ import android.Manifest.permission
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -14,8 +16,8 @@ import java.util.UUID
 
 class NotificationService: Service() {
 
-    private val notificationManager: NotificationManagerCompat =
-        NotificationManagerCompat.from(this)
+    //private val notificationManager: NotificationManagerCompat =
+        //NotificationManagerCompat.from(this)
 
     override fun onCreate() {
         super.onCreate()
@@ -35,8 +37,16 @@ class NotificationService: Service() {
         }
 
        // Build notification
+        val builder = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setSmallIcon(R.drawable.star)
+            .setContentTitle("My Title!")
+            .setContentText("My text")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
 
-        TODO("Build and show notification")
+        with(NotificationManagerCompat.from(this)) {
+            notify(NOTIFICATION_ID, builder.build())
+        }
+
         return START_STICKY_COMPATIBILITY
     }
 
@@ -46,7 +56,18 @@ class NotificationService: Service() {
     }
 
     private fun createNotificationChannel() {
-        TODO("Create notification channel and register with the system")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "My Channel"
+            val descriptionText = "Channel for my Notification"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     companion object {
